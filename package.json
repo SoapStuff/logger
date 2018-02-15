@@ -1,0 +1,31 @@
+{
+  "name": "simple-nodejs-logger",
+  "version": "1.0.0",
+  "description": "\"A logger for nodejs\"",
+  "main": "index.js",
+  "scripts": {
+    "test": "node tests/test.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SoapStuff/logger.git"
+  },
+  "keywords": [
+    "logger",
+    "debugger",
+    "info",
+    "warnings"
+  ],
+  "author": "Arjan Seijs",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/SoapStuff/logger/issues"
+  },
+  "homepage": "https://github.com/SoapStuff/logger#readme",
+  "dependencies": {
+    "colours-logger": "^1.0.1"
+  },
+  "devDependencies": {
+    "simple-tests-js": "^1.1.0"
+  }
+}
