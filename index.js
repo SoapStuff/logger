@@ -37,7 +37,7 @@ class Logger {
      */
     assert(assertion, object) {
         if (options.asserts) {
-            let string = this._getString_(object, 'red');
+            let string = this._getString_(object, 'red', false);
             console.assert(assertion, string)
         }
     }
@@ -48,7 +48,7 @@ class Logger {
      */
     log(object) {
         if ((options.all || options.loggers.indexOf(this.name) > -1) && options.logs) {
-            let string = this._getString_(object, 'black');
+            let string = this._getString_(object, 'black', options.colour);
             console.log(string)
         }
     }
@@ -59,7 +59,7 @@ class Logger {
      */
     warning(object) {
         if ((options.all || options.loggers.indexOf(this.name) > -1) && options.warnings) {
-            let string = this._getString_(object, 'red');
+            let string = this._getString_(object, 'red', options.colour);
             console.log(string)
         }
     }
@@ -68,20 +68,21 @@ class Logger {
      * Gets the formatted string
      * @param {*} object the object to log.
      * @param {*} color the color to log in.
+     * @param {boolean} useColour if to use the colour.
      * @return {string}
      * @private
      */
-    _getString_(object, color) {
-        if (options.colour) {
+    _getString_(object, color, useColour) {
+        if (useColour) {
             if (options.stack) {
-                return colours.formatter(`[@{${color}}${this.name}@{!${color}}]@{${color}} At ${__from_function}:${__called_line} => ${object}@{!${color}}`);
+                return colours.formatter(`[@{${color}}${this.name}@{!${color}}]@{${color}} At ${__from_file}:${__from_function}:${__from_line} => ${object}@{!${color}}`);
             }
             return colours.formatter(`[@{${color}}${this.name}@{!${color}}] @{${color}}${object}@{!${color}}`);
         } else {
             if (options.stack) {
-                return colours.formatter(`[${this.name}] At ${__from_function}:${__called_line} => ${object}`);
+                return `[${this.name}] At ${__from_file}:${__from_function}:${__from_line} => ${object}`;
             }
-            return colours.formatter(`[${this.name}] ${object}`);
+            return `[${this.name}] ${object}`;
         }
     }
 }
@@ -181,7 +182,7 @@ function enableStack() {
         }
     });
 
-    Object.defineProperty(global, '__called_line', {
+    Object.defineProperty(global, '__from_line', {
         get: function () {
             return __stack[3].getLineNumber();
         }
@@ -189,7 +190,15 @@ function enableStack() {
 
     Object.defineProperty(global, '__from_function', {
         get: function () {
-            return __stack[3].getFunctionName();
+            return __stack[3].getFunctionName() || 'anonymous';
+        }
+    });
+
+    Object.defineProperty(global, '__from_file', {
+        get: function () {
+            let file = __stack[3].getFileName();
+            let index = file.lastIndexOf('\\');
+            return index > -1 ? file.substr(index + 1) : file;
         }
     });
 }
@@ -231,6 +240,7 @@ function disableStack() {
     getBooleanOption("warnings");
     getBooleanOption("colour");
     getArrayOption("loggers");
+
 
     function getArrayOption(_option) {
         const option = prefix + _option;
