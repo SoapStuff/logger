@@ -1,7 +1,7 @@
 {
   "name": "simple-nodejs-logger",
   "version": "1.0.0",
-  "description": "\"A logger for nodejs\"",
+  "description": "A logger for nodejs",
   "main": "index.js",
   "scripts": {
     "test": "node tests/test.js"

@@ -9,7 +9,8 @@ const options = {
     logs: true,
     asserts: true,
     warnings: true,
-    loggers: [],
+    colour: true,
+    loggers: []
 };
 
 /**
@@ -23,7 +24,7 @@ class Logger {
      */
     constructor(name) {
         if (typeof name !== "string") {
-            throw new Error("Typemismatch, name should be a string.")
+            throw new Error("Type mismatch, name should be a string.")
         }
         this.name = name;
         loggers[name] = this;
@@ -36,8 +37,8 @@ class Logger {
      */
     assert(assertion, object) {
         if (options.asserts) {
-            let string = `[@{red}${this.name}@{!red}] @{red}${object}@{!red}`;
-            console.assert(assertion, colours.formatter(string))
+            let string = this._getString_(object, 'red');
+            console.assert(assertion, string)
         }
     }
 
@@ -71,10 +72,17 @@ class Logger {
      * @private
      */
     _getString_(object, color) {
-        if (options.stack) {
-            return colours.formatter(`[@{${color}}${this.name}@{!${color}}]@{${color}} At ${__from_function}:${__called_line} => ${object}@{!${color}}`);
+        if (options.colour) {
+            if (options.stack) {
+                return colours.formatter(`[@{${color}}${this.name}@{!${color}}]@{${color}} At ${__from_function}:${__called_line} => ${object}@{!${color}}`);
+            }
+            return colours.formatter(`[@{${color}}${this.name}@{!${color}}] @{${color}}${object}@{!${color}}`);
+        } else {
+            if (options.stack) {
+                return colours.formatter(`[${this.name}] At ${__from_function}:${__called_line} => ${object}`);
+            }
+            return colours.formatter(`[${this.name}] ${object}`);
         }
-        return colours.formatter(`[@{${color}}${this.name}@{!${color}}] @{${color}}${object}@{!${color}}`);
     }
 }
 
@@ -106,13 +114,14 @@ module.exports = function (name) {
  *  logs: <boolean> To enable default logging. Default: true.
  *  asserts: <boolean> To enable assertion logging. Default: true.
  *  warnings: <boolean> To enable warning logging. Default: true.
+ *  colours: <boolean> To enable colours in logging. Default: true.
  *  loggers: <Array> If not all loggers enabled, this array should contain the name of the enabled loggers.
  *  }
  * @param {*} json The json objects with the options.
  */
 module.exports.options = setOptions = function (json) {
-    console.log(json);
     /** @namespace json.enable */
+
     if (json.enable === false) {
         options.all = false;
         options.logs = false;
@@ -120,7 +129,8 @@ module.exports.options = setOptions = function (json) {
         options.asserts = false;
         return;
     }
-    if (json.stack !== undefined && typeof json.stack === "boolean") {
+
+    if (typeof json.stack === "boolean") {
         options.stack = json.stack;
         if (options.stack) {
             enableStack();
@@ -129,19 +139,23 @@ module.exports.options = setOptions = function (json) {
             disableStack();
         }
     }
-    if (json.all !== undefined && typeof json.all === "boolean") {
+
+    if (typeof json.all === "boolean") {
         options.all = json.all
     }
-    if (json.asserts !== undefined && typeof json.asserts === "boolean") {
+    if (typeof json.asserts === "boolean") {
         options.asserts = json.asserts;
     }
-    if (json.warnings !== undefined && typeof json.warnings === "boolean") {
+    if (typeof json.warnings === "boolean") {
         options.warnings = json.warnings;
     }
-    if (json.logs !== undefined && typeof json.logs === "boolean") {
+    if (typeof json.logs === "boolean") {
         options.logs = json.logs;
     }
-    if (json.loggers !== undefined && json.loggers instanceof Array) {
+    if (typeof json.colour === "boolean") {
+        options.colour = json.colour;
+    }
+    if (json.loggers instanceof Array) {
         if (json.all === undefined) options.all = false;
         options.loggers = json.loggers;
     }
@@ -199,10 +213,12 @@ function disableStack() {
  *  --logger-logs: <boolean>
  *  --logger-asserts: <boolean>
  *  --logger-warnings: <boolean>
+ *  --logger-colour: <boolean>
  *  --logger-loggers: <count> <String1> <String2> ...
  */
 (function init() {
     loggers.default = new Logger("Logger");
+
     const args = process.argv;
     const prefix = "--logger-";
     const options = {};
@@ -213,6 +229,7 @@ function disableStack() {
     getBooleanOption("logs");
     getBooleanOption("asserts");
     getBooleanOption("warnings");
+    getBooleanOption("colour");
     getArrayOption("loggers");
 
     function getArrayOption(_option) {
